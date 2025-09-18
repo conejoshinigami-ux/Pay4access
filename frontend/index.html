@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Pay4Access MVP</title>
+</head>
+<body>
+    <h1>Login Pay4Access</h1>
+
+    <form id="loginForm">
+        <input type="email" id="email" placeholder="Email" required>
+        <input type="password" id="password" placeholder="Contraseña" required>
+        <button type="submit">Login</button>
+    </form>
+
+    <hr>
+
+    <h2>Registrar nuevo usuario</h2>
+    <form id="registerForm">
+        <input type="email" id="regEmail" placeholder="Email" required>
+        <input type="password" id="regPassword" placeholder="Contraseña" required>
+        <button type="submit">Registrar</button>
+    </form>
+
+    <hr>
+    <h2>Contenido Premium</h2>
+    <div id="premiumContent" style="display:none;">
+        <p>🎉 ¡Este es tu contenido premium desbloqueado!</p>
+    </div>
+
+    <button id="payButton">Paga y Accede</button>
+
+    <script>
+        const loginForm = document.getElementById('loginForm');
+        const registerForm = document.getElementById('registerForm');
+        const payButton = document.getElementById('payButton');
+        const premiumContent = document.getElementById('premiumContent');
+
+        // ===== LOGIN =====
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            const res = await fetch('http://localhost:3000/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password })
+            });
+            const data = await res.json();
+            if (data.token) alert("Login exitoso! Token: " + data.token);
+            else alert(data.error);
+        });
+
+        // ===== REGISTRO =====
+        registerForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('regEmail').value;
+            const password = document.getElementById('regPassword').value;
+
+            const res = await fetch('http://localhost:3000/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password })
+            });
+            const data = await res.json();
+            if (data.message) alert(data.message);
+            else alert(data.error);
+        });
+
+        // ===== PAGA Y ACCEDE =====
+        payButton.addEventListener('click', async () => {
+            // Paso 1: generar quote
+            const quoteRes = await fetch('http://localhost:3000/quote', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ amount: 1, recipient: 'creador@example.com' })
+            });
+            const quoteData = await quoteRes.json();
+            console.log("Quote generado:", quoteData);
+
+            // Paso 2: simular pago
+            const payRes = await fetch('http://localhost:3000/pay', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ quoteId: quoteData.quoteId })
+            });
+            const payData = await payRes.json();
+            console.log("Pago:", payData);
+
+            if (payData.status === "payment_completed") {
+                alert("Pago realizado con éxito. Contenido desbloqueado!");
+                premiumContent.style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html>
